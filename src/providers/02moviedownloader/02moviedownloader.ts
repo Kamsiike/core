@@ -8,7 +8,11 @@ import type {
     SubtitleFormat
 } from '@omss/framework';
 import { BaseProvider, type SourceType, type Subtitle } from '@omss/framework';
-import { EncryptedResponse, MovieDownloaderResponse, Token } from './02moviedownloader.types.js';
+import {
+    EncryptedResponse,
+    MovieDownloaderResponse,
+    Token
+} from './02moviedownloader.types.js';
 import { generateRandomUserAgent } from '../../utils/ua.js';
 
 export class MovieDownloader extends BaseProvider {
@@ -251,15 +255,24 @@ export class MovieDownloader extends BaseProvider {
         };
     }
 
-    private decryptPayload(cipherBundle: string, token: string): MovieDownloaderResponse {
+    private decryptPayload(
+        cipherBundle: string,
+        token: string
+    ): MovieDownloaderResponse {
         const parts = cipherBundle.split(':');
-        if (parts.length !== 2) throw new Error('Invalid encrypted payload format');
+        if (parts.length !== 2)
+            throw new Error('Invalid encrypted payload format');
         const iv = Buffer.from(parts[0], 'base64');
         const cipherBytes = Buffer.from(parts[1], 'base64');
         const key = createHash('sha256').update(token).digest();
         const decipher = createDecipheriv('aes-256-cbc', key, iv);
-        const decrypted = Buffer.concat([decipher.update(cipherBytes), decipher.final()]);
-        return JSON.parse(decrypted.toString('utf8')) as MovieDownloaderResponse;
+        const decrypted = Buffer.concat([
+            decipher.update(cipherBytes),
+            decipher.final()
+        ]);
+        return JSON.parse(
+            decrypted.toString('utf8')
+        ) as MovieDownloaderResponse;
     }
 
     private buildPageUrl(media: ProviderMediaObject): string {
@@ -295,7 +308,9 @@ export class MovieDownloader extends BaseProvider {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            const raw = await response.json() as MovieDownloaderResponse | EncryptedResponse;
+            const raw = (await response.json()) as
+                | MovieDownloaderResponse
+                | EncryptedResponse;
             if ('encrypted' in raw && raw.encrypted === true) {
                 return this.decryptPayload(raw.data, token);
             }
